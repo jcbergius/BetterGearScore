@@ -1,5 +1,5 @@
 ## Interface: 11305
-## Title: Gear Score
+## Title: Better Gear Score
 ## Author: GearScore Addon
 ## Version: 1.0.0
 ## Description: Calculate gear score based on item stat budgets with class-specific weighting

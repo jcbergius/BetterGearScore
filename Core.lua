@@ -22,7 +22,7 @@ end
 function GearScore:OnEvent(event, ...)
     if event == "ADDON_LOADED" then
         local addon = ...
-        if addon == "GearScore" then
+        if addon == "BetterGearScore" then
             GearScore:Initialize()
         end
     elseif event == "PLAYER_LOGIN" then
