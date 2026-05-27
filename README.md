@@ -1,98 +1,398 @@
 # Better Gear Score
 
-A WoW Classic addon that calculates gear score based on item stat budgets with class-specific weighting.
+Better Gear Score is a World of Warcraft Classic / Anniversary addon that calculates a role-aware gear score for the player’s equipped items.
+
+Unlike simple item-level or raw-stat scoring, Better Gear Score attempts to value gear based on what your character is actually built to do. It detects your class and talent specialization, chooses an appropriate role profile, scans equipped items, and calculates both raw and weighted gear scores.
 
 ## Features
 
-- **Raw Stat Budget Calculation**: Base gear score is the sum of all stats on an item
-  - Example: Item with 50 STR + 50 AGI + 50 INT = 150 base stat budget
+- **Automatic Role Detection**
+  - Reads the player’s talent trees.
+  - Automatically selects an appropriate role profile.
+  - Examples:
+    - Restoration Shaman → Shaman Healer
+    - Protection Warrior → Warrior Tank
+    - Holy Paladin → Paladin Healer
+    - Shadow Priest → Priest DPS
 
-- **Class-Weighted Scoring**: Applies class-specific multipliers to each stat
-  - Different classes value different stats (e.g., Rogues value Agility more, Mages value Intellect)
-  - Supports all 9 WoW Classic classes with optimized weights
+- **Role-Weighted Gear Score**
+  - Stats are weighted differently depending on role.
+  - Healers value healing power, intellect, spirit, and MP5.
+  - Tanks value stamina, armor, defense, dodge, parry, and block.
+  - Physical DPS value hit, attack power, agility, strength, crit, and haste.
+  - Casters value spell power, hit, intellect, crit, and haste.
 
-- **Character Total Score**: View combined weighted score for all equipped items
+- **Raw Stat Budget**
+  - Shows the total unweighted stat budget on your gear.
+  - Useful for comparing how much total stat value an item has before role weighting.
 
-- **Individual Item Scores**: See each item's contribution to your gear score
+- **Tooltip Scanning**
+  - Adds Better Gear Score information directly to item tooltips.
+  - Detects many Classic-style green equip effects that are not always exposed cleanly by Blizzard’s item stat API.
+  - Examples:
+    - `Equip: Increases healing done by up to X`
+    - `Equip: Increases damage done by magical spells and effects by up to X`
+    - `Equip: Restores X mana per 5 sec.`
+    - `Equip: Improves your chance to hit by X%`
 
-- **Multiple Display Options**:
-  - UI Panel: Scrollable window showing character total and individual items
-  - Chat Commands: Quick access via slash commands
-  - Item Tooltips: Hover over items to see details
+- **Equipped Gear Window**
+  - Displays total weighted gear score.
+  - Shows raw and weighted totals.
+  - Lists equipped items and their individual contribution.
+
+- **Chat Commands**
+  - Quick access to score, UI, detected role, and available profiles.
 
 ## Installation
 
-1. Copy the `BetterGearScore` folder to your WoW Classic addons directory:
+1. Download or clone this repository.
+
+2. Copy the addon folder into your WoW Classic addon directory:
+
+   ```text
+   World of Warcraft/_classic_/Interface/AddOns/BetterGearScore
    ```
+
+   On Windows, this is often:
+
+   ```text
    C:\Program Files (x86)\World of Warcraft\_classic_\Interface\AddOns\BetterGearScore
    ```
-   (Path varies by WoW installation location)
 
-2. Reload WoW or type `/reload` in-game
+3. Make sure the folder contains `BetterGearScore.toc` directly inside it.
 
-3. The addon loads automatically on login
+   Correct:
+
+   ```text
+   Interface/AddOns/BetterGearScore/BetterGearScore.toc
+   ```
+
+   Incorrect:
+
+   ```text
+   Interface/AddOns/BetterGearScore/BetterGearScore/BetterGearScore.toc
+   ```
+
+4. Restart the game or type:
+
+   ```text
+   /reload
+   ```
 
 ## Usage
 
-### Chat Commands
+### Basic Commands
 
-- `/gearscore` or `/gs` - Show help menu
-- `/gs show` or `/gs ui` - Open the gear score window
-- `/gs hide` or `/gs close` - Close the window
-- `/gs toggle` - Toggle window visibility
-- `/gs score` - Print current gear score to chat
+```text
+/bgs
+/gs
+```
 
-### UI Window
+Shows the help menu.
 
-- **Total Gear Score**: Large text showing your weighted character gear score
-- **Raw vs Weighted**: Shows both raw stat budget and class-weighted score
-- **Item List**: Scrollable list of all equipped items with individual scores
-- **Item Hover**: Hover over any item to see the full tooltip
+```text
+/bgs score
+```
 
-## How the Calculation Works
+Prints your current Better Gear Score in chat.
 
-1. **Raw Stat Budget**: Sum all stats on an item
-   - Counts: Strength, Agility, Intellect, Stamina, Spirit, Armor, Attack Power, Spell Power, Defense, Dodge, Parry, Block, Critical Strike, Haste
+```text
+/bgs show
+```
 
-2. **Apply Class Weights**: Multiply each stat by the class-specific weight
-   - Example for Rogue on an item:
-     - 50 STR × 0.8 = 40
-     - 50 AGI × 1.4 = 70
-     - 50 INT × 0.2 = 10
-     - **Total Weighted Score = 120**
+Opens the Better Gear Score window.
 
-3. **Sum All Items**: Add weighted scores for all equipped items to get character total
+```text
+/bgs hide
+```
 
-## Class Weights
+Closes the Better Gear Score window.
 
-Each class has optimized stat multipliers:
+```text
+/bgs toggle
+```
 
-- **Warrior**: Favors Strength (1.2) and Stamina (1.1)
-- **Paladin**: Balanced Strength (1.0), Intellect (1.1), Block (1.0)
-- **Hunter**: Favors Agility (1.3) and Attack Power (1.1)
-- **Rogue**: Heavily favors Agility (1.4) and Attack Power (1.2)
-- **Priest**: Heavily favors Intellect (1.4) and Spell Power (1.3)
-- **Death Knight**: Favors Strength (1.3) and Stamina (1.2)
-- **Shaman**: Balanced with Intellect (1.2) emphasis
-- **Mage**: Heavily favors Intellect (1.5) and Spell Power (1.4)
-- **Warlock**: Favors Intellect (1.4) and Spell Power (1.3)
-- **Druid**: Balanced weights (1.0-1.1) for versatility
+Toggles the Better Gear Score window.
+
+```text
+/bgs detect
+```
+
+Shows the detected talent profile and talent point distribution.
+
+```text
+/bgs profiles
+```
+
+Lists all available scoring profiles.
+
+```text
+/bgs profile
+```
+
+Shows the currently selected profile.
+
+```text
+/bgs profile auto
+```
+
+Returns profile selection to automatic talent detection.
+
+```text
+/bgs profile warrior_tank
+```
+
+Manually overrides the profile. This is mostly useful for testing or edge cases.
+
+## Automatic Role Detection
+
+Better Gear Score uses your talent trees to determine your role profile.
+
+For example:
+
+| Class | Talent Tree | Detected Profile |
+|---|---|---|
+| Warrior | Arms | Warrior DPS |
+| Warrior | Fury | Warrior DPS |
+| Warrior | Protection | Warrior Tank |
+| Paladin | Holy | Paladin Healer |
+| Paladin | Protection | Paladin Tank |
+| Paladin | Retribution | Paladin DPS |
+| Priest | Discipline | Priest Healer |
+| Priest | Holy | Priest Healer |
+| Priest | Shadow | Priest DPS |
+| Shaman | Elemental | Shaman Elemental |
+| Shaman | Enhancement | Shaman Enhancement |
+| Shaman | Restoration | Shaman Healer |
+| Druid | Balance | Druid Balance |
+| Druid | Feral Combat | Druid Feral |
+| Druid | Restoration | Druid Restoration |
+
+Some roles are inherently ambiguous. For example, a Feral Druid may be playing as either cat DPS or bear tank. Better Gear Score currently defaults Feral to `Druid Feral`. Future versions may improve this by also analyzing equipped gear.
+
+## Scoring Model
+
+Better Gear Score calculates two values:
+
+### Raw Stat Budget
+
+The raw stat budget is the sum of all detected stats on an item.
+
+Example:
+
+```text
++18 Spirit
++42 Healing
++14 Spell Damage
++7 MP5
+```
+
+Raw stat budget:
+
+```text
+18 + 42 + 14 + 7 = 81
+```
+
+### Weighted Gear Score
+
+The weighted score multiplies each stat by the currently selected role profile.
+
+Example for a Shaman Healer:
+
+```text
+18 Spirit × 0.35 = 6.30
+42 Healing × 1.00 = 42.00
+14 Spell Power × 0.35 = 4.90
+7 MP5 × 0.95 = 6.65
+```
+
+Weighted score:
+
+```text
+6.30 + 42.00 + 4.90 + 6.65 = 59.85
+```
+
+Displayed score:
+
+```text
+59
+```
+
+## Supported Stats
+
+Better Gear Score currently supports these stat categories:
+
+```text
+Strength
+Agility
+Intellect
+Stamina
+Spirit
+Armor
+Attack Power
+Ranged Attack Power
+Spell Power
+Healing
+Defense
+Dodge
+Parry
+Block
+Critical Strike
+Hit
+Haste
+Mana per 5 seconds
+```
+
+Classic items often contain special equip effects rather than clean modern stat entries. Better Gear Score scans item tooltips to detect important effects such as healing power, spell damage, MP5, hit, crit, and dodge.
+
+## Role Profiles
+
+Each profile uses weights from `0.0` to `1.0`.
+
+```text
+1.0 = best-in-role stat
+0.7–0.9 = strong stat
+0.3–0.6 = useful secondary stat
+0.1–0.2 = minor incidental value
+0.0 = effectively useless for that role
+```
+
+Examples:
+
+- A Shaman Healer gives `0.0` value to Strength and Attack Power.
+- A Warrior Tank gives high value to Stamina, Armor, Defense, Dodge, Parry, and Block.
+- A Mage DPS gives high value to Spell Power, Hit, Intellect, Crit, and Haste.
+- A Rogue DPS gives high value to Agility, Attack Power, Hit, Crit, and Haste.
 
 ## Files
 
-- `GearScore.toc` - Addon manifest
-- `Core.lua` - Main addon initialization and event handling
-- `StatWeights.lua` - Class-specific stat multipliers
-- `ItemParser.lua` - Item stat extraction from WoW API
-- `GearScoreCalculator.lua` - Gear score calculation logic
-- `UI.lua` - User interface panel and tooltips
-- `Commands.lua` - Chat command handler
+```text
+BetterGearScore.toc
+Core.lua
+StatWeights.lua
+Profiles.lua
+TalentDetector.lua
+ItemParser.lua
+BetterGearScoreCalculator.lua
+UI.lua
+Tooltip.lua
+Commands.lua
+README.md
+```
 
-## Requirements
+### File Overview
 
-- World of Warcraft Classic
-- Lua 5.1 (included with WoW)
+- **BetterGearScore.toc**
+  - Addon manifest and load order.
+
+- **Core.lua**
+  - Initializes the addon, registers events, and refreshes the UI.
+
+- **StatWeights.lua**
+  - Contains all role-based stat weight tables.
+
+- **Profiles.lua**
+  - Handles profile names, defaults, manual overrides, and automatic profile selection.
+
+- **TalentDetector.lua**
+  - Reads talent trees and maps the dominant tree to a scoring profile.
+
+- **ItemParser.lua**
+  - Reads equipped items, parses item stats, and scans tooltip equip effects.
+
+- **BetterGearScoreCalculator.lua**
+  - Calculates raw and weighted gear scores.
+
+- **UI.lua**
+  - Creates and updates the Better Gear Score window.
+
+- **Tooltip.lua**
+  - Adds Better Gear Score information to item tooltips.
+
+- **Commands.lua**
+  - Registers and handles slash commands.
+
+## Saved Variables
+
+Better Gear Score uses:
+
+```lua
+BetterGearScoreSavedVars
+```
+
+This is used for settings such as manual profile overrides.
+
+Your `.toc` should contain:
+
+```toc
+## SavedVariables: BetterGearScoreSavedVars
+```
+
+## Development Notes
+
+### Reloading
+
+After making code changes, reload the UI with:
+
+```text
+/reload
+```
+
+### Lua Errors
+
+To enable Lua error popups in-game:
+
+```text
+/console scriptErrors 1
+/reload
+```
+
+To disable them again:
+
+```text
+/console scriptErrors 0
+/reload
+```
+
+### Testing Role Detection
+
+Use:
+
+```text
+/bgs detect
+```
+
+This prints the detected profile and the talent point distribution used to determine it.
+
+### Testing Tooltip Parsing
+
+Hover items with green equip effects such as:
+
+```text
+Equip: Increases healing done by up to 42 and damage done by up to 14 for all magical spells and effects.
+Equip: Restores 7 mana per 5 sec.
+```
+
+The tooltip should show a higher raw stat budget than just the visible base stats.
+
+## Limitations
+
+- Tooltip parsing is currently designed for English clients.
+- Some Classic item effects have unusual wording and may not be detected yet.
+- Talent detection identifies specialization, not always exact gameplay intent.
+- Feral Druid cat vs bear is currently not perfectly distinguishable from talents alone.
+- Gear scoring is an approximation and should not replace class knowledge, encounter context, or common sense.
+
+## Planned Improvements
+
+- Better tooltip parsing coverage for more Classic item effects.
+- Localization support for non-English clients.
+- Smarter Feral Druid tank vs DPS detection based on equipped gear.
+- Optional profile dropdown in the UI.
+- Better support for weapon DPS and weapon-specific scoring.
+- More detailed item breakdowns in the UI.
+- Export/debug command for detected item stats.
 
 ## License
 
-MIT License - Feel free to modify and distribute
+MIT License
