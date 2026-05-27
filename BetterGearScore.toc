@@ -1,13 +1,16 @@
 ## Interface: 11305
 ## Title: Better Gear Score
-## Author: GearScore Addon
-## Version: 1.0.0
-## Description: Calculate gear score based on item stat budgets with class-specific weighting
-## SavedVariables: GearScoreSavedVars
+## Author: Jonathan Bergius
+## Version: 1.0.1
+## Notes: Calculates gear score from equipped item stat budgets with class-specific weighting
+## SavedVariables: BetterGearScoreSavedVars
 
 Core.lua
 StatWeights.lua
+Profiles.lua
+TalentDetector.lua
 ItemParser.lua
-GearScoreCalculator.lua
+BetterGearScoreCalculator.lua
 UI.lua
+Tooltip.lua
 Commands.lua

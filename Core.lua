@@ -1,49 +1,57 @@
--- GearScore Core Module
-GearScore = {}
-GearScore.VERSION = "1.0.0"
+-- BetterGearScore Core Module
+BetterGearScore = BetterGearScore or {}
 
--- Initialize the addon
-function GearScore:Initialize()
-    self:RegisterEvents()
-    print("|cff00ff00GearScore|r v" .. self.VERSION .. " loaded. Use |cff00ff00/gearscore|r or |cff00ff00/gs|r for help.")
+BetterGearScore.VERSION = "1.0.1"
+BetterGearScore.ItemParser = BetterGearScore.ItemParser or {}
+BetterGearScore.Calculator = BetterGearScore.Calculator or {}
+BetterGearScore.Weights = BetterGearScore.Weights or {}
+BetterGearScore.UI = BetterGearScore.UI or {}
+BetterGearScore.Commands = BetterGearScore.Commands or {}
+BetterGearScore.Tooltip = BetterGearScore.Tooltip or {}
+BetterGearScore.TalentDetector = BetterGearScore.TalentDetector or {}
+BetterGearScore.Profiles = BetterGearScore.Profiles or {}
+
+function BetterGearScore:Initialize()
+    BetterGearScoreSavedVars = BetterGearScoreSavedVars or {}
+    print("|cff00ff00BetterGearScore|r v" .. self.VERSION .. " loaded. Use |cff00ff00/bgs|r or |cff00ff00/gs|r for help.")
 end
 
-function GearScore:RegisterEvents()
-    self.frame = CreateFrame("Frame", "GearScoreFrame")
+function BetterGearScore:RegisterEvents()
+    if self.frame then
+        return
+    end
+
+    self.frame = CreateFrame("Frame", "BetterGearScoreFrame")
     self.frame:RegisterEvent("ADDON_LOADED")
     self.frame:RegisterEvent("PLAYER_LOGIN")
-    self.frame:RegisterEvent("EQUIPMENT_SETS_CHANGED")
-    self.frame:RegisterEvent("ITEM_LOCK_CHANGED")
-    self.frame:SetScript("OnEvent", function(frame, event, ...)
-        GearScore:OnEvent(event, ...)
+    self.frame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+    self.frame:RegisterEvent("CHARACTER_POINTS_CHANGED")
+    self.frame:RegisterEvent("PLAYER_TALENT_UPDATE")
+
+    self.frame:SetScript("OnEvent", function(_, event, ...)
+        BetterGearScore:OnEvent(event, ...)
     end)
 end
 
-function GearScore:OnEvent(event, ...)
+function BetterGearScore:OnEvent(event, ...)
     if event == "ADDON_LOADED" then
-        local addon = ...
-        if addon == "BetterGearScore" then
-            GearScore:Initialize()
+        local addonName = ...
+        if addonName == "BetterGearScore" then
+            self:Initialize()
         end
     elseif event == "PLAYER_LOGIN" then
-        GearScore:OnPlayerLogin()
-    elseif event == "EQUIPMENT_SETS_CHANGED" or event == "ITEM_LOCK_CHANGED" then
-        GearScore:RefreshUI()
+        self:RefreshUI()
+    elseif event == "PLAYER_EQUIPMENT_CHANGED"
+        or event == "CHARACTER_POINTS_CHANGED"
+        or event == "PLAYER_TALENT_UPDATE" then
+        self:RefreshUI()
     end
 end
 
-function GearScore:OnPlayerLogin()
-    GearScoreSavedVars = GearScoreSavedVars or {}
-    self:RefreshUI()
-end
-
-function GearScore:RefreshUI()
-    if GearScoreUI and GearScoreUI:IsVisible() then
-        GearScoreUI:Update()
+function BetterGearScore:RefreshUI()
+    if self.UI and self.UI:IsVisible() then
+        self.UI:Update()
     end
 end
 
--- Initialize when loaded
-if GearScore.frame == nil then
-    GearScore:RegisterEvents()
-end
+BetterGearScore:RegisterEvents()
