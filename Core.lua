@@ -1,4 +1,5 @@
 -- BetterGearScore Core Module
+
 BetterGearScore = BetterGearScore or {}
 
 BetterGearScore.VERSION = "1.0.1"
@@ -10,10 +11,16 @@ BetterGearScore.Commands = BetterGearScore.Commands or {}
 BetterGearScore.Tooltip = BetterGearScore.Tooltip or {}
 BetterGearScore.TalentDetector = BetterGearScore.TalentDetector or {}
 BetterGearScore.Profiles = BetterGearScore.Profiles or {}
+BetterGearScore.CharacterPaneUI = BetterGearScore.CharacterPaneUI or {}
 
 function BetterGearScore:Initialize()
     BetterGearScoreSavedVars = BetterGearScoreSavedVars or {}
+
     print("|cff00ff00BetterGearScore|r v" .. self.VERSION .. " loaded. Use |cff00ff00/bgs|r or |cff00ff00/gs|r for help.")
+
+    if self.CharacterPaneUI and self.CharacterPaneUI.Initialize then
+        self.CharacterPaneUI:Initialize()
+    end
 end
 
 function BetterGearScore:RegisterEvents()
@@ -24,6 +31,7 @@ function BetterGearScore:RegisterEvents()
     self.frame = CreateFrame("Frame", "BetterGearScoreFrame")
     self.frame:RegisterEvent("ADDON_LOADED")
     self.frame:RegisterEvent("PLAYER_LOGIN")
+    self.frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     self.frame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
     self.frame:RegisterEvent("CHARACTER_POINTS_CHANGED")
     self.frame:RegisterEvent("PLAYER_TALENT_UPDATE")
@@ -36,10 +44,11 @@ end
 function BetterGearScore:OnEvent(event, ...)
     if event == "ADDON_LOADED" then
         local addonName = ...
+
         if addonName == "BetterGearScore" then
             self:Initialize()
         end
-    elseif event == "PLAYER_LOGIN" then
+    elseif event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
         self:RefreshUI()
     elseif event == "PLAYER_EQUIPMENT_CHANGED"
         or event == "CHARACTER_POINTS_CHANGED"
@@ -51,6 +60,10 @@ end
 function BetterGearScore:RefreshUI()
     if self.UI and self.UI:IsVisible() then
         self.UI:Update()
+    end
+
+    if self.CharacterPaneUI and self.CharacterPaneUI.Update then
+        self.CharacterPaneUI:Update()
     end
 end
 

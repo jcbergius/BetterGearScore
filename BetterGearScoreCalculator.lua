@@ -2,61 +2,165 @@
 
 local Calculator = BetterGearScore.Calculator
 
--- Stat normalization factors: Convert all stats to equivalent value scale
--- These represent how much value 1 point of each stat is worth relative to others
--- Based on TBC stat valuations
-Calculator.STAT_NORMALIZATION = {
-    STRENGTH = 1.0,           -- 1 STR = 1 AP (base unit)
-    AGILITY = 0.6,            -- 1 AGI ≈ 0.6 AP + dodge value
-    INTELLECT = 0.5,          -- 1 INT ≈ 15 mana (less valuable than pure damage stats)
-    STAMINA = 0.25,           -- 1 STA = 10 HP (10:1 ratio)
-    SPIRIT = 0.35,            -- 1 SPIRIT ≈ mp5 regen + defensive value
-    ARMOR = 0.01,             -- 1 ARMOR ≈ 0.01 physical damage reduction
-    ATTACKPOWER = 1.0,        -- AP is base unit
-    RANGED_ATTACKPOWER = 0.95, -- Ranged AP slightly less valuable
-    SPELLPOWER = 0.75,        -- Spell damage is less scalable than AP
-    HEALING = 0.8,            -- Healing power is valuable but not as much as SP
-    DEFENSE = 0.5,            -- Defense has diminishing returns
-    DODGE = 0.8,              -- Dodge is valuable for mitigation
-    PARRY = 0.75,             -- Parry is slightly less valuable than dodge
-    BLOCK = 0.6,              -- Block value varies by class
-    CRITICAL = 1.2,           -- Crit is highly valuable
-    HIT = 1.5,                -- Hit is extremely valuable (mandatory stat)
-    HASTE = 0.9,              -- Haste is valuable but less critical than hit
-    MP5 = 1.3,                -- MP5 is very valuable for healers
+Calculator.ITEMIZATION_MODE = "TBC"
+Calculator.ITEM_BUDGET_EXPONENT = 1.7095
+
+Calculator.STAT_BUDGET_COST = {
+    STRENGTH = 1.00,
+    AGILITY = 1.00,
+    INTELLECT = 1.00,
+    SPIRIT = 1.00,
+
+    -- TBC stamina is cheaper than primary stats in the reverse-engineered budget model.
+    STAMINA = 0.67,
+
+    ARMOR = 0.07,
+    ATTACKPOWER = 0.50,
+    RANGED_ATTACKPOWER = 0.40,
+
+    SPELLPOWER = 0.86,
+    HEALING = 0.45,
+
+    DEFENSE = 1.00,
+    DODGE = 1.00,
+    PARRY = 1.00,
+    BLOCK = 1.00,
+    CRITICAL = 1.00,
+    HIT = 1.00,
+    HASTE = 1.00,
+    EXPERTISE = 1.00,
+
+    MP5 = 2.00,
 }
 
+Calculator.WEAPON_STAT_KEYS = {
+    WEAPON_MIN_DAMAGE = true,
+    WEAPON_MAX_DAMAGE = true,
+    WEAPON_AVERAGE_DAMAGE = true,
+    WEAPON_SPEED = true,
+    WEAPON_DPS = true,
+}
+
+function Calculator:IsWeaponStat(statType)
+    return self.WEAPON_STAT_KEYS[statType] == true
+end
+
+function Calculator:GetStatBudgetCost(statType)
+    return self.STAT_BUDGET_COST[statType] or 1.0
+end
+
+function Calculator:CalculateBudgetAdjustedStatValue(statType, value)
+    return (value or 0) * self:GetStatBudgetCost(statType)
+end
+
 function Calculator:CalculateRawStatBudget(stats)
-    local budget = 0
-
-    for _, value in pairs(stats or {}) do
-        budget = budget + value
-    end
-
-    return budget
-end
-
-function Calculator:CalculateNormalizedStatValue(statType, value)
-    -- Convert raw stat value to normalized equivalent
-    local normalizationFactor = self.STAT_NORMALIZATION[statType] or 1.0
-    return (value or 0) * normalizationFactor
-end
-
-function Calculator:CalculateWeightedScore(stats, profileKey)
-    local score = 0
+    local exponent = self.ITEM_BUDGET_EXPONENT or 1.7095
+    local total = 0
 
     for statType, value in pairs(stats or {}) do
-        -- First normalize the stat to common scale
-        local normalizedValue = self:CalculateNormalizedStatValue(statType, value)
-        -- Then apply class/role-specific weight
-        local weight = BetterGearScore.Weights:GetWeight(profileKey, statType)
-        score = score + (normalizedValue * weight)
+        if not self:IsWeaponStat(statType) then
+            local budgetValue = self:CalculateBudgetAdjustedStatValue(statType, value)
+
+            if budgetValue > 0 then
+                total = total + math.pow(budgetValue, exponent)
+            end
+        end
     end
 
-    return score
+    if total <= 0 then
+        return 0
+    end
+
+    return math.pow(total, 1 / exponent)
 end
 
-function Calculator:CalculateItemScore(itemLink, profileKey)
+function Calculator:CalculateWeightedStatScore(stats, profileKey)
+    local exponent = self.ITEM_BUDGET_EXPONENT or 1.7095
+    local total = 0
+
+    for statType, value in pairs(stats or {}) do
+        if not self:IsWeaponStat(statType) then
+            local budgetValue = self:CalculateBudgetAdjustedStatValue(statType, value)
+            local roleWeight = BetterGearScore.Weights:GetWeight(profileKey, statType)
+            local weightedBudgetValue = budgetValue * roleWeight
+
+            if weightedBudgetValue > 0 then
+                total = total + math.pow(weightedBudgetValue, exponent)
+            end
+        end
+    end
+
+    if total <= 0 then
+        return 0
+    end
+
+    return math.pow(total, 1 / exponent)
+end
+
+function Calculator:GetWeaponWeightKeys(slotKey, itemLink)
+    if slotKey == "RangedSlot" then
+        return "RANGED_WEAPON_DPS", "RANGED_WEAPON_DAMAGE"
+    end
+
+    if slotKey == "MainHandSlot" or slotKey == "SecondaryHandSlot" then
+        return "MELEE_WEAPON_DPS", "MELEE_WEAPON_DAMAGE"
+    end
+
+    local equipLoc = nil
+
+    if itemLink then
+        equipLoc = select(9, GetItemInfo(itemLink))
+    end
+
+    if equipLoc == "INVTYPE_RANGED"
+        or equipLoc == "INVTYPE_RANGEDRIGHT"
+        or equipLoc == "INVTYPE_THROWN"
+        or equipLoc == "INVTYPE_RELIC" then
+        return "RANGED_WEAPON_DPS", "RANGED_WEAPON_DAMAGE"
+    end
+
+    return "MELEE_WEAPON_DPS", "MELEE_WEAPON_DAMAGE"
+end
+
+function Calculator:CalculateWeaponBudgetScore(stats)
+    local weaponDps = stats and stats.WEAPON_DPS or 0
+    local averageDamage = stats and stats.WEAPON_AVERAGE_DAMAGE or 0
+
+    if not weaponDps or weaponDps <= 0 then
+        return 0
+    end
+
+    return weaponDps + ((averageDamage or 0) * 0.15)
+end
+
+function Calculator:CalculateWeaponScore(stats, profileKey, slotKey, itemLink)
+    if not stats then
+        return 0
+    end
+
+    local weaponDps = stats.WEAPON_DPS or 0
+    local averageDamage = stats.WEAPON_AVERAGE_DAMAGE or 0
+
+    if weaponDps <= 0 then
+        return 0
+    end
+
+    local dpsWeightKey, damageWeightKey = self:GetWeaponWeightKeys(slotKey, itemLink)
+
+    local dpsWeight = BetterGearScore.Weights:GetWeight(profileKey, dpsWeightKey)
+    local damageWeight = BetterGearScore.Weights:GetWeight(profileKey, damageWeightKey)
+
+    return (weaponDps * dpsWeight) + (averageDamage * damageWeight)
+end
+
+function Calculator:CalculateWeightedScore(stats, profileKey, slotKey, itemLink)
+    local weightedStatScore = self:CalculateWeightedStatScore(stats, profileKey)
+    local weaponScore = self:CalculateWeaponScore(stats, profileKey, slotKey, itemLink)
+
+    return weightedStatScore + weaponScore
+end
+
+function Calculator:CalculateItemScore(itemLink, profileKey, slotKey)
     if not itemLink then
         return 0, 0, {}
     end
@@ -64,10 +168,12 @@ function Calculator:CalculateItemScore(itemLink, profileKey)
     profileKey = profileKey or BetterGearScore.Profiles:GetSelectedProfile()
 
     local stats = BetterGearScore.ItemParser:ParseItemStats(itemLink)
-    local rawScore = self:CalculateRawStatBudget(stats)
-    local weightedScore = self:CalculateWeightedScore(stats, profileKey)
+    local statBudgetScore = self:CalculateRawStatBudget(stats)
+    local weaponBudgetScore = self:CalculateWeaponBudgetScore(stats)
+    local budgetScore = statBudgetScore + weaponBudgetScore
+    local weightedScore = self:CalculateWeightedScore(stats, profileKey, slotKey, itemLink)
 
-    return rawScore, weightedScore, stats
+    return budgetScore, weightedScore, stats, statBudgetScore, weaponBudgetScore
 end
 
 function Calculator:CalculateTotalBetterGearScore(profileKey)
@@ -80,8 +186,10 @@ function Calculator:CalculateTotalBetterGearScore(profileKey)
     local itemScores = {}
 
     for slot, item in pairs(equippedItems) do
-        local rawScore = self:CalculateRawStatBudget(item.stats)
-        local weightedScore = self:CalculateWeightedScore(item.stats, profileKey)
+        local statBudgetScore = self:CalculateRawStatBudget(item.stats)
+        local weaponBudgetScore = self:CalculateWeaponBudgetScore(item.stats)
+        local rawScore = statBudgetScore + weaponBudgetScore
+        local weightedScore = self:CalculateWeightedScore(item.stats, profileKey, item.slotKey, item.link)
 
         totalRawScore = totalRawScore + rawScore
         totalWeightedScore = totalWeightedScore + weightedScore
@@ -89,9 +197,12 @@ function Calculator:CalculateTotalBetterGearScore(profileKey)
         itemScores[slot] = {
             rawScore = rawScore,
             weightedScore = weightedScore,
+            statBudgetScore = statBudgetScore,
+            weaponBudgetScore = weaponBudgetScore,
             stats = item.stats,
             link = item.link,
             slotName = item.slotName,
+            slotKey = item.slotKey,
         }
     end
 
@@ -106,10 +217,12 @@ end
 
 function Calculator:GetPlayerClass()
     local _, classFileName = UnitClass("player")
+
     return classFileName
 end
 
 function Calculator:GetPlayerBetterGearScore()
     local profileKey = BetterGearScore.Profiles:GetSelectedProfile()
+
     return self:CalculateTotalBetterGearScore(profileKey)
 end
