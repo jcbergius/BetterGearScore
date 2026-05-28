@@ -19,20 +19,8 @@ function Commands:HandleCommand(msg)
 
     if command == "" or command == "help" then
         self:PrintHelp()
-    elseif command == "show" or command == "ui" then
-        BetterGearScore.UI:Show()
-    elseif command == "hide" or command == "close" then
-        BetterGearScore.UI:Hide()
-    elseif command == "toggle" then
-        BetterGearScore.UI:Toggle()
-    elseif command == "score" then
-        self:PrintBetterGearScore()
     elseif command == "profile" then
         self:HandleProfileCommand(rest)
-    elseif command == "profiles" then
-        BetterGearScore.Profiles:PrintAvailableProfiles()
-    elseif command == "detect" then
-        BetterGearScore.TalentDetector:PrintDetectedProfile()
     else
         self:PrintHelp()
     end
@@ -65,7 +53,6 @@ function Commands:HandleProfileCommand(profileKey)
             .. " |cff888888("
             .. string.lower(selectedProfile)
             .. ")|r")
-        print("Use |cffffff00/bgs profiles|r to list profiles.")
         print("Use |cffffff00/bgs profile warrior_tank|r to change profile.")
         return
     end
@@ -77,34 +64,16 @@ function Commands:HandleProfileCommand(profileKey)
             .. BetterGearScore.Profiles:GetProfileDisplayName(normalizedProfile))
     else
         print("|cffff0000Unknown BetterGearScore profile:|r " .. profileKey)
-        print("Use |cffffff00/bgs profiles|r to list available profiles.")
     end
-end
-
-function Commands:PrintBetterGearScore()
-    local data = BetterGearScore.Calculator:GetPlayerBetterGearScore()
-
-    print("|cff00ff00BetterGearScore:|r "
-        .. data.profileName
-        .. " | Weighted: "
-        .. math.floor(data.totalWeightedScore)
-        .. " | Raw: "
-        .. math.floor(data.totalRawScore))
 end
 
 function Commands:PrintHelp()
     print("|cff00ff00BetterGearScore Commands:|r")
-    print("/bgs or /gs - Show help")
-    print("/bgs show - Open the gear score window")
-    print("/bgs hide - Close the gear score window")
-    print("/bgs toggle - Toggle the gear score window")
-    print("/bgs score - Print your current gear score to chat")
     print("/bgs profile - Show current role profile")
-    print("/bgs profiles - List available role profiles")
-    print("/bgs detect - Detect and display the current role profile")
-    print("/bgs profile warrior_tank - Set role profile")
+    print("/bgs profile warrior_tank - Set role profile (e.g., warrior_tank, mage_dps, etc.)")
     print("/bgs profile auto - Use automatic talent detection")
-    
+    print("")
+    print("|cff00ff00Gear score is displayed in your character pane automatically.|r")
 end
 
 Commands:RegisterCommands()

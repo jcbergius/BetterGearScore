@@ -1,8 +1,8 @@
 ## Interface: 11305
 ## Title: Better Gear Score
 ## Author: Jonathan Bergius
-## Version: 1.0.1
-## Notes: Calculates gear score from equipped item stat budgets with class-specific weighting
+## Version: 1.1.0
+## Notes: Calculates gear score from equipped item stat budgets with TBC-optimized stat priorities
 ## SavedVariables: BetterGearScoreSavedVars
 
 Core.lua
@@ -12,5 +12,6 @@ TalentDetector.lua
 ItemParser.lua
 BetterGearScoreCalculator.lua
 UI.lua
+CharacterPaneUI.lua
 Tooltip.lua
 Commands.lua
